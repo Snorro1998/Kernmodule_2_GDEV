@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// Script dat aanwezig is bij stroompalen, maakt ook kabels
+/// </summary>
 [ExecuteInEditMode]
 public class PowerPole : MonoBehaviour
 {
@@ -9,8 +12,8 @@ public class PowerPole : MonoBehaviour
     public PowerPole nextPowerPole;
     public GameObject wirePrefab;
 
-    float wireLength = 0;
-    Transform cableOrigins, cableDestinations;
+    private float wireLength = 0;
+    private Transform cableOrigins, cableDestinations;
 
     private void AdjustWireLength(GameObject _gm/*, float length*/, Vector3 startPos, Vector3 endPos)
     {
