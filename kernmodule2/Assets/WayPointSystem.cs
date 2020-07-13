@@ -8,17 +8,18 @@ public class WayPointSystem : MonoBehaviour
 {
     [HideInInspector]
     public GameObject currentPrefab = null;
+    public bool loop = false;
 
     /// <summary>
-    /// Verwijdert alle componenten van een object
+    /// Verwijdert alle componenten van een object.
     /// </summary>
     /// <param name="t"></param>
     private void RemoveAllComponents(Transform t)
     {
-        var currentComponents = t.GetComponents<Component>();
-        foreach (var comp in currentComponents)
+        Component[] currentComponents = t.GetComponents<Component>();
+        foreach (Component comp in currentComponents)
         {
-            //negeert transforms. Kan ook andere dingen negeren door ze hieraan toe te voegen
+            //negeert transforms. Kan ook andere dingen negeren door ze hieraan toe te voegen.
             if (comp.GetType() != typeof(Transform))
             {
                 DestroyImmediate(comp);
@@ -27,15 +28,15 @@ public class WayPointSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Voeg alle componenten van de nieuwe prefab toe aan een object
+    /// Voeg alle componenten van de nieuwe prefab toe aan een object.
     /// </summary>
     /// <param name="t"></param>
     private void AddNewComponents(Transform t)
     {
-        var newComponents = currentPrefab.GetComponents<Component>();
-        foreach (var comp in newComponents)
+        Component[] newComponents = currentPrefab.GetComponents<Component>();
+        foreach (Component comp in newComponents)
         {
-            //negeert transforms. Kan ook andere dingen negeren door ze hieraan toe te voegen
+            //negeert transforms. Kan ook andere dingen negeren door ze hieraan toe te voegen.
             if (comp.GetType() != typeof(Transform))
             {
                 UnityEditorInternal.ComponentUtility.CopyComponent(comp);
@@ -45,7 +46,7 @@ public class WayPointSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Een nettere functie om objecten bij te werken, maar faalt omdat hij de children niet mee kopieert
+    /// Een nettere functie om objecten bij te werken, maar faalt omdat hij de children niet mee kopieert.
     /// </summary>
     /// <param name="t"></param>
     /// <param name="i"></param>
@@ -54,13 +55,13 @@ public class WayPointSystem : MonoBehaviour
         RemoveAllComponents(t);
         AddNewComponents(t);
 
-        //stelt de schaal en de naam juist in
+        //stelt de schaal en de naam juist in.
         t.localScale = currentPrefab.transform.localScale;
         t.name = currentPrefab.name + (i + 1).ToString();
     }
 
     /// <summary>
-    /// Een functie die objecten bijwerkt door ze opnieuw aan te maken. Breekt andere objecten als die referenties zouden hebben
+    /// Een functie die objecten bijwerkt door ze opnieuw aan te maken. Breekt andere objecten als die referenties zouden hebben.
     /// </summary>
     /// <param name="t"></param>
     /// <param name="i"></param>
@@ -77,23 +78,45 @@ public class WayPointSystem : MonoBehaviour
         tNew.name = currentPrefab.name + (i + 1).ToString();
     }
 
-    private void CallChildUpdateMethod()
+    public void CallChildrenUpdateMethods()
     {
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
+            //Huidig, vorig en volgend object.
             Transform t = transform.GetChild(i);
-            var components = t.GetComponents<Component>();
-            foreach (var comp in components)
+            Transform tNext = i != transform.childCount - 1 ? transform.GetChild(i + 1) : loop ? transform.GetChild(0) : null;
+            Transform tPrev = i != 0 ? transform.GetChild(i - 1) : loop ? transform.GetChild(transform.childCount - 1) : null;
+
+            Component[] components = t.GetComponents<Component>();
+            WayPointObject w = null;
+
+            //Kijkt of het object het component WayPointObject heeft of iets wat hiervan afstamt.
+            foreach (Component comp in components)
             {
-                WayPointObject w = comp as WayPointObject;
+                w = comp as WayPointObject;
                 if (w != null)
                 {
-                    w.UpdateSelf();
+                    break;
                 }
             }
+            //Zo niet voeg er dan een toe.
+            if (w == null)
+            {
+                w = t.gameObject.AddComponent<WayPointObject>();
+            }
+            if (w.wpSys == null)
+            {
+                w.wpSys = this;
+            }
+            w.nextObj = tNext;
+            w.prevObj = tPrev;
+            w.UpdateSelf();
         }
     }
 
+    /// <summary>
+    /// Wordt uitgevoerd wanneer de prefab is aangepast
+    /// </summary>
     public void UpdatePrefabOfChildren()
     {
         #region nodig voor CreateNewObject, maar niet voor KeepObject
@@ -108,7 +131,6 @@ public class WayPointSystem : MonoBehaviour
         for (int i = transform.childCount - 1; i >= 0; i--)
         {
             Transform t = transform.GetChild(i);
-
             //KeepObjectAndChangeComponents(t, i);
             CreateNewObject(t, i);
         }
@@ -119,6 +141,6 @@ public class WayPointSystem : MonoBehaviour
         }
         #endregion
 
-        CallChildUpdateMethod();
+        CallChildrenUpdateMethods();
     }
 }
