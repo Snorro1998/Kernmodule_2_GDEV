@@ -32,7 +32,7 @@ public class WayPointWindow : EditorWindow
     {
         if (lastActiveObjectPrefab != activeObjectPrefab && currentSelected != null)
         {
-            Debug.Log("changed object");
+            //Debug.Log("prefab is aangepast");
             lastActiveObjectPrefab = activeObjectPrefab;
             wp.currentPrefab = activeObjectPrefab;
             wp.UpdatePrefabOfChildren();
@@ -41,13 +41,12 @@ public class WayPointWindow : EditorWindow
 
     private void OnSelectionChange()
     {
-        //wp = null;
         currentSelected = Selection.activeGameObject;
-        activeObjectPrefab = null;
+        //activeObjectPrefab = null;
         lastActiveObjectPrefab = activeObjectPrefab;
         if(currentSelected != null)
         {
-            /*WayPointSystem */wp = currentSelected.GetComponent<WayPointSystem>();
+            wp = currentSelected.GetComponent<WayPointSystem>();
             if (wp != null)
             {
                 activeObjectPrefab = wp.currentPrefab;
@@ -63,7 +62,6 @@ public class WayPointWindow : EditorWindow
             {
                 activeObjectPrefab = wp.currentPrefab;
                 lastActiveObjectPrefab = activeObjectPrefab;
-                return;
             }
             else
             {
