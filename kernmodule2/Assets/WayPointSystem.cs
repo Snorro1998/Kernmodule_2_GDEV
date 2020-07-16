@@ -78,6 +78,102 @@ public class WayPointSystem : MonoBehaviour
         tNew.name = currentPrefab.name + (i + 1).ToString();
     }
 
+    /// <summary>
+    /// Stelt in of het systeem rondgaat of niet
+    /// </summary>
+    /// <param name="looping"></param>
+    public void SetLoopAround(bool looping)
+    {
+        loop = looping;
+        CallChildrenUpdateMethods();
+    }
+
+    /// <summary>
+    /// Maakt nieuwe waypoint aan
+    /// </summary>
+    /// <param name="atBeginning"></param>
+    public void CreateWayPoint(bool atBeginning)
+    {
+        int index = atBeginning ? 0 : transform.childCount - 1;
+        Transform t = Instantiate(currentPrefab).transform;
+        t.position = transform.position;
+
+        if (transform.childCount > 0)
+        {
+            Transform tmpT = transform.GetChild(index);
+            t.position = tmpT.position + (atBeginning ? -1 : 1) * tmpT.forward * 20;
+        }
+
+        WayPointObject wp = t.GetComponent<WayPointObject>();
+        if (wp == null)
+        {
+            wp = t.gameObject.AddComponent<WayPointObject>();
+            wp.wpSys = this;
+        }
+
+        t.parent = transform;
+        t.SetSiblingIndex(atBeginning ? index : index + 1);
+        Selection.activeGameObject = t.gameObject;
+    }
+
+    /// <summary>
+    /// Maakt nieuwe waypoint aan het einde aan
+    /// </summary>
+    public void AppendWayPoint()
+    {
+        CreateWayPoint(false);
+    }
+
+    /// <summary>
+    /// Maakt nieuwe waypoint aan het begin aan
+    /// </summary>
+    public void PrependWayPoint()
+    {
+        CreateWayPoint(true);
+    }
+
+    public void InsertWayPointAfter(Transform t)
+    {
+        if (t != null)
+        {
+            int index = t.GetSiblingIndex();
+            //als het geselecteerde element aan het einde staat doe dan hetzelfde als append
+            if (index == t.root.childCount - 1)
+            {
+                AppendWayPoint();
+            }
+            else
+            {
+                Transform tt = Instantiate(currentPrefab).transform;
+                tt.position = Vector3.Lerp(t.position, t.root.GetChild(index + 1).position, 0.5f);
+                tt.parent = transform;
+                tt.SetSiblingIndex(index + 1);
+                Selection.activeGameObject = t.gameObject;
+            }
+        }
+    }
+
+    public void InsertWayPointBefore(Transform t)
+    {
+        if (t != null)
+        {
+            int index = t.GetSiblingIndex();
+            //als het geselecteerde element aan het begin staat doe dan hetzelfde als prepend
+            if (index == 0)
+            {
+                PrependWayPoint();
+            }
+            else
+            {
+                Transform tt = Instantiate(currentPrefab).transform;
+                tt.position = Vector3.Lerp(t.position, t.root.GetChild(index - 1).position, 0.5f);
+                tt.parent = transform;
+                tt.SetSiblingIndex(index);
+                Selection.activeGameObject = t.gameObject;
+            }
+        }
+    }
+
     public void CallChildrenUpdateMethods()
     {
         for (int i = transform.childCount - 1; i >= 0; i--)
@@ -86,19 +182,10 @@ public class WayPointSystem : MonoBehaviour
             Transform t = transform.GetChild(i);
             Transform tNext = i != transform.childCount - 1 ? transform.GetChild(i + 1) : loop ? transform.GetChild(0) : null;
             Transform tPrev = i != 0 ? transform.GetChild(i - 1) : loop ? transform.GetChild(transform.childCount - 1) : null;
-
-            Component[] components = t.GetComponents<Component>();
+            
             WayPointObject w = null;
-
             //Kijkt of het object het component WayPointObject heeft of iets wat hiervan afstamt.
-            foreach (Component comp in components)
-            {
-                w = comp as WayPointObject;
-                if (w != null)
-                {
-                    break;
-                }
-            }
+            /*WayPointObject*/ w = t.GetComponent<WayPointObject>();
             //Zo niet voeg er dan een toe.
             if (w == null)
             {
@@ -111,6 +198,7 @@ public class WayPointSystem : MonoBehaviour
             w.nextObj = tNext;
             w.prevObj = tPrev;
             w.UpdateSelf();
+            w.name = currentPrefab.name + (i + 1).ToString();
         }
     }
 

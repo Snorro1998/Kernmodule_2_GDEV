@@ -5,13 +5,18 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class WayPointObject : MonoBehaviour
 {
-    [HideInInspector]
+    //[HideInInspector]
     public WayPointSystem wpSys = null;
-    [HideInInspector]
+    //[HideInInspector]
     public Transform nextObj = null;
-    [HideInInspector]
+    //[HideInInspector]
     public Transform prevObj = null;
     private Vector3 lastPos;
+
+    private bool hasMoved
+    {
+        get { return lastPos != transform.position; }
+    }
 
     public virtual void OnEnable()
     {
@@ -26,8 +31,20 @@ public class WayPointObject : MonoBehaviour
 
     private void Update()
     {
+        //niet geweldig maar het werkt
+        if (wpSys == null)
+        {
+            GameObject gm = transform.root.gameObject;
+            WayPointSystem wp = gm.GetComponent<WayPointSystem>();
+            if (wp == null)
+            {
+                return;
+            }
+            wpSys = wp;
+        }
+
         //wanneer het object verplaatst is
-        if (lastPos != transform.position)
+        if (hasMoved)
         {
             wpSys.CallChildrenUpdateMethods();
             lastPos = transform.position;
@@ -40,6 +57,7 @@ public class WayPointObject : MonoBehaviour
     /// <param name="tilt"></param>
     public void PointToNext(bool tilt)
     {
+        //wanneer hij niet het laatste element is
         if (nextObj != null)
         {
             Vector3 tmpVec = nextObj.position;
@@ -50,13 +68,13 @@ public class WayPointObject : MonoBehaviour
             transform.LookAt(tmpVec);
         }
         //wijs hem in dezelfde richting als de een na laatste als hij de laatste is
-        else
+        else if (prevObj != null)
         {
             transform.forward = prevObj.forward;
         }
     }
 
-    public virtual void UpdateSelf(/*Transform tNext, Transform tPrev*/)
+    public virtual void UpdateSelf()
     {
         PointToNext(true);
     }

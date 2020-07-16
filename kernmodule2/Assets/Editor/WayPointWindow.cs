@@ -5,10 +5,13 @@ using UnityEditor;
 
 public class WayPointWindow : EditorWindow
 {
-    //public GameObject currentSelected = null;
     public GameObject currentWPElement = null;
     public GameObject activeObjectPrefab = null;
     public GameObject lastActiveObjectPrefab = null;
+
+    private bool activeLoop = false;
+    private bool lastLoop = false;
+
     //private
     public WayPointSystem currentWayPointSystem = null;
 
@@ -20,14 +23,15 @@ public class WayPointWindow : EditorWindow
 
     private void OnGUI()
     {
-        /*
+        //om te testen, kan later weggehaald worden
         SerializedObject objj = new SerializedObject(this);
         EditorGUILayout.PropertyField(objj.FindProperty("currentWayPointSystem"));
         objj.ApplyModifiedProperties();
 
+        //om te testen, kan later weggehaald worden
         SerializedObject objjj = new SerializedObject(this);
         EditorGUILayout.PropertyField(objjj.FindProperty("currentWPElement"));
-        objjj.ApplyModifiedProperties();*/
+        objjj.ApplyModifiedProperties();
 
         SerializedObject obj = new SerializedObject(this);
         EditorGUILayout.PropertyField(obj.FindProperty("activeObjectPrefab"));
@@ -41,43 +45,67 @@ public class WayPointWindow : EditorWindow
             }
             else if (GUILayout.Button("Create new waypoint system"))
             {
-                CreateNewWayPoint();
+                CreateNewWayPointSystem();
             }
         }
-
         else
         {
+            activeLoop = EditorGUILayout.Toggle("Loop", activeLoop);
             GUILayout.Label("Create new object", EditorStyles.boldLabel);
 
             if (GUILayout.Button("At the end"))
             {
-                //CreateWaypoint();
+                currentWayPointSystem.AppendWayPoint();
             }
-
             if (GUILayout.Button("At the beginning"))
             {
-                //Selection.activeObject = powerPoleRoot.GetChild(0);
-                //CreateWaypointBefore();
+                currentWayPointSystem.PrependWayPoint();
+            }
+            if (currentWPElement != null)
+            {
+                if (GUILayout.Button("After selected"))
+                {
+                    currentWayPointSystem.InsertWayPointAfter(currentWPElement.transform);
+                }         
+                if (GUILayout.Button("Before selected"))
+                {
+                    currentWayPointSystem.InsertWayPointBefore(currentWPElement.transform);
+                }
             }
         }     
     }
 
     private void Update()
     {
-        if (lastActiveObjectPrefab != activeObjectPrefab && currentWayPointSystem != null)
+        if (currentWayPointSystem != null)
         {
-            //Debug.Log("prefab is aangepast");
-            lastActiveObjectPrefab = activeObjectPrefab;
-            currentWayPointSystem.currentPrefab = activeObjectPrefab;
-            currentWayPointSystem.UpdatePrefabOfChildren();
-        }
+            //prefab is aangepast
+            if (lastActiveObjectPrefab != activeObjectPrefab)
+            {
+                lastActiveObjectPrefab = activeObjectPrefab;
+                currentWayPointSystem.currentPrefab = activeObjectPrefab;
+                currentWayPointSystem.UpdatePrefabOfChildren();
+            }
+            //loopoptie is aangepast
+            if (activeLoop != lastLoop)
+            {
+                lastLoop = activeLoop;
+                currentWayPointSystem.SetLoopAround(activeLoop);
+            }
+        }   
     }
 
+    /// <summary>
+    /// Pakt het object dat een niveau onder de root zit
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="par"></param>
+    /// <returns></returns>
     private GameObject GetChildGameObjectFromHighestLevel(GameObject obj, GameObject par)
     {
         Transform tmpTransform = obj.transform;
         Transform tmpTransformPar = par.transform;
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 200; i++)
         {
             if (tmpTransform.parent == tmpTransformPar || tmpTransform.parent == null)
             {
@@ -117,16 +145,17 @@ public class WayPointWindow : EditorWindow
         return spawnPos;
     }
 
-    private void CreateNewWayPoint()
+    private void CreateNewWayPointSystem()
     {
         Vector3 spawnPos = CalcSpawnPosition();
         GameObject gm = new GameObject("WayPointSystem");
         gm.transform.position = spawnPos;
         currentWayPointSystem = gm.AddComponent<WayPointSystem>();
         currentWayPointSystem.currentPrefab = activeObjectPrefab;
+        currentWayPointSystem.AppendWayPoint();
     }
 
-    private void UpdateCurrentPrefab()
+    private void UpdateSettings()
     {
         currentWPElement = null;
         currentWayPointSystem = null;
@@ -150,38 +179,14 @@ public class WayPointWindow : EditorWindow
             }
             activeObjectPrefab = currentWayPointSystem.currentPrefab;
             lastActiveObjectPrefab = activeObjectPrefab;
+            
+            activeLoop = currentWayPointSystem.loop;
+            lastLoop = activeLoop;
         }
-
-        /*
-        if (currentSelected != null)
-        {
-            currentWayPointSystem = currentSelected.GetComponent<WayPointSystem>();
-            if (currentWayPointSystem != null)
-            {
-                activeObjectPrefab = currentWayPointSystem.currentPrefab;
-                lastActiveObjectPrefab = activeObjectPrefab;
-                return;
-            }
-            if (currentSelected.transform.parent != null)
-            {
-                currentSelected = currentSelected.transform.root.gameObject;
-            }
-            currentWayPointSystem = currentSelected.GetComponent<WayPointSystem>();
-            if (currentWayPointSystem != null)
-            {
-                activeObjectPrefab = currentWayPointSystem.currentPrefab;
-                lastActiveObjectPrefab = activeObjectPrefab;
-            }
-            else
-            {
-                currentSelected = null;
-            }
-        }
-        */
     }
 
     private void OnSelectionChange()
     {
-        UpdateCurrentPrefab();
+        UpdateSettings();
     }
 }
