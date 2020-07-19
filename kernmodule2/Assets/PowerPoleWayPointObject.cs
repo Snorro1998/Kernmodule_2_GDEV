@@ -5,7 +5,7 @@ using UnityEngine;
 public class PowerPoleWayPointObject : WayPointObject
 {
     public GameObject wirePrefab;
-    private Transform wires;
+    public Transform wires;
     private Transform wireDestinations;
     private float wireLength = 0;
 
@@ -15,10 +15,10 @@ public class PowerPoleWayPointObject : WayPointObject
         wires = transform.Find("StartPoints");
         if (wirePrefab != null)
         {
-            if (wireLength == 0)
-            {
+            //if (wireLength == 0)
+            //{
                 wireLength = wirePrefab.GetComponent<Renderer>().bounds.size.z;
-            }
+            //}
         }     
     }
 
@@ -26,7 +26,6 @@ public class PowerPoleWayPointObject : WayPointObject
     {
         float distToOther = Vector3.Distance(startPos.position, endPos.position);
         Vector3 tmpScale = Vector3.one;
-        //Ik weet niet wat het probleem is maar er komt soms 0 uit. Vandaar dat er een minimumwaarde is
         tmpScale.z *= distToOther / Mathf.Max(0.0001f, wireLength);
         startPos.transform.localScale = tmpScale;
     }

@@ -10,6 +10,8 @@ public class WayPointSystem : MonoBehaviour
     public GameObject currentPrefab = null;
     public bool loop = false;
 
+    public List<WayPointObject> elements = new List<WayPointObject>();
+
     /// <summary>
     /// Verwijdert alle componenten van een object.
     /// </summary>
@@ -116,6 +118,28 @@ public class WayPointSystem : MonoBehaviour
         Selection.activeGameObject = t.gameObject;
     }
 
+    public void V2AppendWayPoint()
+    {
+        Transform t = Instantiate(currentPrefab).transform;
+        WayPointObject wp = t.GetComponent<WayPointObject>();
+        int i = elements.Count;
+
+        if (wp == null)
+        {
+            wp = t.gameObject.AddComponent<WayPointObject>();
+        }
+
+        wp.wpSys = this;
+        elements.Add(wp);
+        wp.transform.parent = transform;
+        wp.transform.name = currentPrefab.name + i;
+    }
+
+    public void UpdateNamesAfterIndex(int i)
+    {
+
+    }
+
     /// <summary>
     /// Maakt nieuwe waypoint aan het einde aan
     /// </summary>
@@ -182,10 +206,10 @@ public class WayPointSystem : MonoBehaviour
             Transform t = transform.GetChild(i);
             Transform tNext = i != transform.childCount - 1 ? transform.GetChild(i + 1) : loop ? transform.GetChild(0) : null;
             Transform tPrev = i != 0 ? transform.GetChild(i - 1) : loop ? transform.GetChild(transform.childCount - 1) : null;
-            
+
             WayPointObject w = null;
             //Kijkt of het object het component WayPointObject heeft of iets wat hiervan afstamt.
-            /*WayPointObject*/ w = t.GetComponent<WayPointObject>();
+            w = t.GetComponent<WayPointObject>();
             //Zo niet voeg er dan een toe.
             if (w == null)
             {

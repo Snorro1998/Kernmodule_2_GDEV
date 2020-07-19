@@ -55,7 +55,8 @@ public class WayPointWindow : EditorWindow
 
             if (GUILayout.Button("At the end"))
             {
-                currentWayPointSystem.AppendWayPoint();
+                ///currentWayPointSystem.AppendWayPoint();
+                currentWayPointSystem.V2AppendWayPoint();
             }
             if (GUILayout.Button("At the beginning"))
             {

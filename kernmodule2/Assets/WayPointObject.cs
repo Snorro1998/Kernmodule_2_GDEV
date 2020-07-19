@@ -5,11 +5,8 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class WayPointObject : MonoBehaviour
 {
-    //[HideInInspector]
     public WayPointSystem wpSys = null;
-    //[HideInInspector]
     public Transform nextObj = null;
-    //[HideInInspector]
     public Transform prevObj = null;
     private Vector3 lastPos;
 
@@ -23,15 +20,16 @@ public class WayPointObject : MonoBehaviour
         lastPos = transform.position;
     }
 
-    /*
     private void OnDestroy()
     {
-        wpSys.CallChildrenUpdateMethods();
-    }*/
+        int i = wpSys.elements.IndexOf(this);
+        Debug.Log("weg, index was " + i);
+        //wpSys.elements.Remove(this);
+        //wpSys.UpdateNamesAfterIndex();
+    }
 
     private void Update()
     {
-        //niet geweldig maar het werkt
         if (wpSys == null)
         {
             GameObject gm = transform.root.gameObject;
@@ -50,7 +48,7 @@ public class WayPointObject : MonoBehaviour
             lastPos = transform.position;
         }
     }
-    
+
     /// <summary>
     /// Wijst het object naar de eerstvolgende in het waypointsysteem
     /// </summary>
