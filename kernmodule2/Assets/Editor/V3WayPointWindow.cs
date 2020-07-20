@@ -14,24 +14,12 @@ public class V3WayPointWindow : EditorWindow
     private bool lastLoop = false;
 
     private V3WayPointSystem currentWayPointSystem = null;
+    private GUIDrawer guiDrawer = new GUIDrawer();
 
-    [MenuItem("Tools/V3 Waypoint Editor")]
+    [MenuItem("Tools/Waypoint Editor")]
     public static void Open()
     {
         GetWindow<V3WayPointWindow>();
-    }
-    
-    /// <summary>
-    /// Toont een knop die een functie uitvoert wanneer hij aangeklikt wordt.
-    /// </summary>
-    /// <param name="txt"></param>
-    /// <param name="a"></param>
-    private void DisplayButton(string txt, Action a)
-    {
-        if (GUILayout.Button(txt))
-        {
-            a();
-        }
     }
 
     private void OnGUI()
@@ -48,7 +36,7 @@ public class V3WayPointWindow : EditorWindow
             }
             else
             {
-                DisplayButton("Create new waypoint system", () => { CreateNewWayPointSystem(); });
+                guiDrawer.DisplayButton("Create new waypoint system", () => { CreateNewWayPointSystem(); });
             }
         }
         else
@@ -56,12 +44,12 @@ public class V3WayPointWindow : EditorWindow
             activeLoop = EditorGUILayout.Toggle("Loop", activeLoop);
             GUILayout.Label("Create new " + activeObjectPrefab.name, EditorStyles.boldLabel);
 
-            DisplayButton("At the end", () => { currentWayPointSystem.Append(); });
-            DisplayButton("At the beginning", () => { currentWayPointSystem.Prepend(); });
+            guiDrawer.DisplayButton("At the end", () => { currentWayPointSystem.Append(); });
+            guiDrawer.DisplayButton("At the beginning", () => { currentWayPointSystem.Prepend(); });
             if (currentWPElement != null)
             {
-                DisplayButton("After selected", () => { currentWayPointSystem.InsertAfter(currentWPElement.GetComponent<V3WayPointObject>()); });
-                DisplayButton("Before selected", () => { currentWayPointSystem.InsertBefore(currentWPElement.GetComponent<V3WayPointObject>()); });
+                guiDrawer.DisplayButton("After selected", () => { currentWayPointSystem.InsertAfter(currentWPElement.GetComponent<V3WayPointObject>()); });
+                guiDrawer.DisplayButton("Before selected", () => { currentWayPointSystem.InsertBefore(currentWPElement.GetComponent<V3WayPointObject>()); });
             }
         }
     }
