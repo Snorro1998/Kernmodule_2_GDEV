@@ -6,7 +6,7 @@ using UnityEditor;
 [ExecuteInEditMode]
 public class V3WayPointSystem : MonoBehaviour
 {
-    private List<V3WayPointObject> elements = new List<V3WayPointObject>();
+    public List<V3WayPointObject> elements = new List<V3WayPointObject>();
     [HideInInspector]
     public GameObject currentPrefab = null;
     [HideInInspector]
@@ -17,7 +17,7 @@ public class V3WayPointSystem : MonoBehaviour
         loop = looping;
         UpdateEverything();
     }
-
+#if false
     public void UpdateNamesAndIndicesFromIndex(int i)
     {
         UpdateEverything();
@@ -30,16 +30,24 @@ public class V3WayPointSystem : MonoBehaviour
         }
         */
     }
+#endif
 
+    /// <summary>
+    /// Werkt alle elementen in het waypointsysteem bij. Deze functie moet nog opgesplitst worden zodat het geheel efficiënter gemaakt kan worden.
+    /// </summary>
     public void UpdateEverything()
     {
-        Debug.Log("updateeverything");
         for (int j = 0; j < elements.Count; j++)
         {
+            // Dit misschien omschrijven naar een if-blok zodat het iets leesbaarder is
             V3WayPointObject nObj = j != elements.Count - 1 ? elements[j + 1] : loop ? elements[0] : null;
             V3WayPointObject pObj = j != 0 ? elements[j - 1] : loop ? elements[elements.Count - 1] : null;
 
             V3WayPointObject wo = elements[j];
+            if (wo == null)
+            {
+                return;
+            }
             wo.name = currentPrefab.name + j;
             wo.indexInWayPointSystem = j;
 
@@ -53,24 +61,54 @@ public class V3WayPointSystem : MonoBehaviour
     public void RemoveWayPoint(V3WayPointObject wo, int index)
     {
         elements.Remove(wo);
-        UpdateNamesAndIndicesFromIndex(index);
+        UpdateEverything();
+        //UpdateNamesAndIndicesFromIndex(index);
     }
 
     public void ReAddDeletedWayPoint(V3WayPointObject wo, int index)
     {
-        if (!elements.Contains(wo) /*&& elements.Count > 0 && index > 0 && index < elements.Count - 1*/)
+        if (!elements.Contains(wo))
         {
-            elements.Insert(index, wo);
-            UpdateNamesAndIndicesFromIndex(index + 1);
+            // Index van object valt binnen de omvang van de lijst.
+            if (index > 0 && index < elements.Count)
+            {
+                if (elements[index] == null)
+                {
+                    elements[index] = wo;
+                }
+                else
+                {
+                    elements.Insert(index, wo);
+                }
+            }
+            // Als zijn index buiten de waypointlijst valt, voeg dan lege elementen vanaf het eind van de lijst toe totdat zijn eigen
+            // index bereikt is. Dit gebeurt gek genoeg vaak als een scene geladen wordt en een waypoint dat later voorkomt zichzelf
+            // eerder probeert toe te voegen dan zijn voorgangers.
+            else
+            {
+                for (int i = elements.Count - 1; i < index - 1; i++)
+                {
+                    elements.Add(null);
+                }
+                elements.Add(wo);
+            }
+            UpdateEverything();
+            //UpdateNamesAndIndicesFromIndex(index + 1);
         }
     }
 
     public void UpdatePrefabForChildren()
     {
-        Debug.Log("updateprefab");
+        int index = -1;
+        V3WayPointObject woCur = Selection.activeTransform.GetComponent<V3WayPointObject>();
+        if (woCur != null)
+        {
+            index = woCur.indexInWayPointSystem;
+        }
         List<Vector3> positions = new List<Vector3>();
         List<Quaternion> rotations = new List<Quaternion>();
 
+        // Verwijdert alle objecten.
         int i = transform.childCount - 1;
         for (int j = i; j >= 0; j--)
         {
@@ -78,6 +116,7 @@ public class V3WayPointSystem : MonoBehaviour
             rotations.Add(elements[j].transform.rotation);
             DestroyImmediate(elements[j].gameObject);
         }
+        // Maakt objecten opnieuw aan met nieuwe prefab.
         for (int j = 0; j < i + 1; j++)
         {
             V3WayPointObject wo = CreateWayPoint();
@@ -88,6 +127,8 @@ public class V3WayPointSystem : MonoBehaviour
             wo.name = currentPrefab.name + wo.indexInWayPointSystem;
             elements.Add(wo);
         }
+        // Stelt huidig geselecteerde object juist in na alles opnieuw aan te hebben gemaakt.
+        Selection.activeTransform = index != -1 ? elements[index].transform : transform;      
     }
 
     public V3WayPointObject CreateWayPoint()
@@ -132,20 +173,6 @@ public class V3WayPointSystem : MonoBehaviour
     public void Append()
     {
         AppendOrPrepend(true);
-#if false
-        //Debug.Log("Append");
-        V3WayPointObject wo = CreateWayPoint();     
-        wo.indexInWayPointSystem = transform.childCount;
-        wo.transform.parent = transform;
-        wo.name = currentPrefab.name + wo.indexInWayPointSystem;
-        elements.Add(wo);
-        if (wo.indexInWayPointSystem > 0)
-        {
-            V3WayPointObject woPrev = elements[wo.indexInWayPointSystem - 1];
-            wo.transform.position = woPrev.transform.position + woPrev.transform.forward * -10;
-        }
-        UpdateEverything();
-#endif
     }
 
     /// <summary>
@@ -154,22 +181,6 @@ public class V3WayPointSystem : MonoBehaviour
     public void Prepend()
     {
         AppendOrPrepend(false);
-#if false
-        //Debug.Log("Prepend");
-        V3WayPointObject wo = CreateWayPoint();
-        wo.indexInWayPointSystem = 0;
-        wo.transform.parent = transform;
-        wo.transform.SetAsFirstSibling();
-        wo.name = currentPrefab.name + wo.indexInWayPointSystem;
-        elements.Insert(0, wo);
-        //UpdateNamesAndIndicesFromIndex(1);
-        if (elements.Count > 1)
-        {
-            V3WayPointObject woPrev = elements[wo.indexInWayPointSystem + 1];
-            wo.transform.position = woPrev.transform.position + woPrev.transform.forward * 10;
-        }
-        UpdateEverything();
-#endif
     }
 
     /// <summary>
@@ -177,16 +188,15 @@ public class V3WayPointSystem : MonoBehaviour
     /// </summary>
     public void InsertAfter(V3WayPointObject wo)
     {
-        //geselecteerde object is de laatste
+        // Doe hetzelfde als append als het geselecteerde object de laatste is.
         if (wo.indexInWayPointSystem == elements.Count - 1)
         {
             Append();
         }
-        //insertafter
+        // Voeg in alle andere gevallen gewoon in na de huidige.
         else
         {
             V3WayPointObject woNext = elements[wo.indexInWayPointSystem + 1];
-            //Debug.Log("InsertAfter");
             V3WayPointObject woNew = CreateWayPoint();
             woNew.indexInWayPointSystem = wo.indexInWayPointSystem + 1;
             woNew.transform.parent = transform;
@@ -200,20 +210,19 @@ public class V3WayPointSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// Maakt een nieuwe waypoint voor de huidige aan
+    /// Maakt een nieuwe waypoint voor de huidige aan.
     /// </summary>
     public void InsertBefore(V3WayPointObject wo)
     {
-        //geselecteerde object is de eerste
+        // Doe hetzelfde als prepend als het geselecteerde object de eerste is.
         if (wo.indexInWayPointSystem == 0)
         {
             Prepend();
         }
-        //insertbefore
+        // Voeg in alle andere gevallen gewoon in voor de huidige.
         else
         {
             V3WayPointObject woPrev = elements[wo.indexInWayPointSystem - 1];
-            //Debug.Log("InsertBefore");
             V3WayPointObject woNew = CreateWayPoint();
             woNew.indexInWayPointSystem = wo.indexInWayPointSystem;
             woNew.transform.parent = transform;

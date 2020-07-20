@@ -6,42 +6,36 @@ using UnityEditor;
 
 public class V3WayPointWindow : EditorWindow
 {
-    public GameObject currentWPElement = null;
+    private GameObject currentWPElement = null;
     public GameObject activeObjectPrefab = null;
-    public GameObject lastActiveObjectPrefab = null;
+    private GameObject lastActiveObjectPrefab = null;
 
     private bool activeLoop = false;
     private bool lastLoop = false;
 
-    //private
-    public V3WayPointSystem currentWayPointSystem = null;
+    private V3WayPointSystem currentWayPointSystem = null;
 
     [MenuItem("Tools/V3 Waypoint Editor")]
     public static void Open()
     {
         GetWindow<V3WayPointWindow>();
     }
-    /*
+    
+    /// <summary>
+    /// Toont een knop die een functie uitvoert wanneer hij aangeklikt wordt.
+    /// </summary>
+    /// <param name="txt"></param>
+    /// <param name="a"></param>
     private void DisplayButton(string txt, Action a)
     {
         if (GUILayout.Button(txt))
         {
             a();
         }
-    }*/
+    }
 
     private void OnGUI()
     {
-        //om te testen, kan later weggehaald worden
-        SerializedObject objj = new SerializedObject(this);
-        EditorGUILayout.PropertyField(objj.FindProperty("currentWayPointSystem"));
-        objj.ApplyModifiedProperties();
-
-        //om te testen, kan later weggehaald worden
-        SerializedObject objjj = new SerializedObject(this);
-        EditorGUILayout.PropertyField(objjj.FindProperty("currentWPElement"));
-        objjj.ApplyModifiedProperties();
-
         SerializedObject obj = new SerializedObject(this);
         EditorGUILayout.PropertyField(obj.FindProperty("activeObjectPrefab"));
         obj.ApplyModifiedProperties();
@@ -52,9 +46,9 @@ public class V3WayPointWindow : EditorWindow
             {
                 GUILayout.Label("No prefab selected", EditorStyles.boldLabel);
             }
-            else if (GUILayout.Button("Create new waypoint system"))
+            else
             {
-                CreateNewWayPointSystem();
+                DisplayButton("Create new waypoint system", () => { CreateNewWayPointSystem(); });
             }
         }
         else
@@ -62,26 +56,12 @@ public class V3WayPointWindow : EditorWindow
             activeLoop = EditorGUILayout.Toggle("Loop", activeLoop);
             GUILayout.Label("Create new " + activeObjectPrefab.name, EditorStyles.boldLabel);
 
-            //werkt niet
-            //DisplayButton("At the end", currentWayPointSystem.Append());
-            if (GUILayout.Button("At the end"))
-            {
-                currentWayPointSystem.Append();
-            }
-            if (GUILayout.Button("At the beginning"))
-            {
-                currentWayPointSystem.Prepend();
-            }
+            DisplayButton("At the end", () => { currentWayPointSystem.Append(); });
+            DisplayButton("At the beginning", () => { currentWayPointSystem.Prepend(); });
             if (currentWPElement != null)
             {
-                if (GUILayout.Button("After selected"))
-                {
-                    currentWayPointSystem.InsertAfter(currentWPElement.GetComponent<V3WayPointObject>());
-                }
-                if (GUILayout.Button("Before selected"))
-                {
-                    currentWayPointSystem.InsertBefore(currentWPElement.GetComponent<V3WayPointObject>());
-                }
+                DisplayButton("After selected", () => { currentWayPointSystem.InsertAfter(currentWPElement.GetComponent<V3WayPointObject>()); });
+                DisplayButton("Before selected", () => { currentWayPointSystem.InsertBefore(currentWPElement.GetComponent<V3WayPointObject>()); });
             }
         }
     }
@@ -90,14 +70,14 @@ public class V3WayPointWindow : EditorWindow
     {
         if (currentWayPointSystem != null)
         {
-            //prefab is aangepast
+            // Prefab is aangepast.
             if (lastActiveObjectPrefab != activeObjectPrefab)
             {
                 lastActiveObjectPrefab = activeObjectPrefab;
                 currentWayPointSystem.currentPrefab = activeObjectPrefab;
                 currentWayPointSystem.UpdatePrefabForChildren();
             }
-            //loopoptie is aangepast
+            // Loopoptie is aangepast.
             if (activeLoop != lastLoop)
             {
                 lastLoop = activeLoop;
@@ -107,7 +87,7 @@ public class V3WayPointWindow : EditorWindow
     }
 
     /// <summary>
-    /// Pakt het object dat een niveau onder de root zit
+    /// Pakt het object dat een niveau onder de root zit.
     /// </summary>
     /// <param name="obj"></param>
     /// <param name="par"></param>
@@ -128,7 +108,7 @@ public class V3WayPointWindow : EditorWindow
     }
 
     /// <summary>
-    /// Berekent spawnpositie afhankelijk van de camera-orientatie
+    /// Berekent spawnpositie afhankelijk van de camera-orientatie.
     /// </summary>
     /// <returns></returns>
     private Vector3 CalcSpawnPosition()
@@ -145,7 +125,7 @@ public class V3WayPointWindow : EditorWindow
         {
             float camAngle = Vector3.Angle(sceneCam.transform.forward, Vector3.down);
 
-            //kijkt naar de grond
+            // Kijkt naar de grond.
             if (camAngle < 90)
             {
                 float vectorMagnitude = sceneCam.transform.position.y / Mathf.Cos(Mathf.Deg2Rad * camAngle);
@@ -155,6 +135,9 @@ public class V3WayPointWindow : EditorWindow
         return spawnPos;
     }
 
+    /// <summary>
+    /// Maakt een nieuw waypointsysteem aan.
+    /// </summary>
     private void CreateNewWayPointSystem()
     {
         Vector3 spawnPos = CalcSpawnPosition();
@@ -165,6 +148,9 @@ public class V3WayPointWindow : EditorWindow
         currentWayPointSystem.Append();
     }
 
+    /// <summary>
+    /// Werk getoonde instellingen bij als de selectie is verandert.
+    /// </summary>
     private void UpdateSettings()
     {
         currentWPElement = null;
@@ -172,15 +158,15 @@ public class V3WayPointWindow : EditorWindow
         GameObject currentSelected = Selection.activeGameObject;
         lastActiveObjectPrefab = activeObjectPrefab;
 
-        //er is iets geselecteerd
+        // Er is iets geselecteerd.
         if (currentSelected != null)
         {
             currentWayPointSystem = currentSelected.GetComponent<V3WayPointSystem>();
-            //geselecteerde object is geen waypointsysteem
+            // Het geselecteerde object is geen waypointsysteem.
             if (currentWayPointSystem == null)
             {
                 currentWayPointSystem = currentSelected.transform.root.GetComponent<V3WayPointSystem>();
-                //geselecteerde object maakt ook geen deel uit van waypointsysteem
+                // Het geselecteerde object maakt ook geen deel uit van waypointsysteem.
                 if (currentWayPointSystem == null)
                 {
                     return;

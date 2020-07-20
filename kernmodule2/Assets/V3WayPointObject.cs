@@ -5,13 +5,20 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class V3WayPointObject : MonoBehaviour
 {
+    //[HideInInspector]
     public V3WayPointSystem wpSys;
+    //[HideInInspector]
     public int indexInWayPointSystem = -1;
+    //[HideInInspector]
     public V3WayPointObject prevObj = null;
+    //[HideInInspector]
     public V3WayPointObject nextObj = null;
 
     private Vector3 lastPosition;
 
+    /// <summary>
+    /// Zal waar zijn als de positie is verandert.
+    /// </summary>
     bool PositionChanged
     {
         get
@@ -20,7 +27,7 @@ public class V3WayPointObject : MonoBehaviour
         }
     }
 
-    private void Awake()
+    public virtual void Awake()
     {
         if (wpSys != null && indexInWayPointSystem != -1)
         {
@@ -30,7 +37,6 @@ public class V3WayPointObject : MonoBehaviour
 
     private void OnDestroy()
     {
-        //Debug.Log("ondest");
         if (wpSys != null && indexInWayPointSystem != -1)
         {
             wpSys.RemoveWayPoint(this, indexInWayPointSystem);
@@ -46,8 +52,33 @@ public class V3WayPointObject : MonoBehaviour
         }
     }
 
-    public void UpdateSelf()
+    public void PointToPrevious(bool tilt)
     {
+        // Hij is niet de eerste.
+        if (prevObj != null)
+        {
+            Vector3 tmpPos = prevObj.transform.position;
+            if (!tilt)
+            {
+                tmpPos.y = transform.position.y;
+                //transform.LookAt(tmpVec);
+            }
+            transform.LookAt(tmpPos);
+        }
+        // Hij is de eerste maar niet de enige.
+        else if (nextObj != null)
+        {
+            transform.forward = nextObj.transform.forward;
+        }
+    }
+
+    /// <summary>
+    /// Werkt zichzelf bij.
+    /// </summary>
+    public virtual void UpdateSelf()
+    {
+        PointToPrevious(true);
+        /*
         if (prevObj != null)
         {
             transform.LookAt(prevObj.transform);
@@ -55,6 +86,6 @@ public class V3WayPointObject : MonoBehaviour
         else if (nextObj != null)
         {
             transform.forward = nextObj.transform.forward;
-        }
+        }*/
     }
 }
