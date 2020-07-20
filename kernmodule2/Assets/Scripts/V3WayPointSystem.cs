@@ -6,34 +6,35 @@ using UnityEditor;
 [ExecuteInEditMode]
 public class V3WayPointSystem : MonoBehaviour
 {
-    public List<V3WayPointObject> elements = new List<V3WayPointObject>();
+    private List<V3WayPointObject> elements = new List<V3WayPointObject>();
     [HideInInspector]
     public GameObject currentPrefab = null;
     [HideInInspector]
     public bool loop = false;
 
+    /// <summary>
+    /// Pakt het object uit als het een prefab is.
+    /// </summary>
+    private void Awake()
+    {
+        if (PrefabUtility.IsPartOfPrefabInstance(gameObject))
+        {
+            PrefabUtility.UnpackPrefabInstance(gameObject, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+        }
+    }
+
+    /// <summary>
+    /// Stelt in of het systeem rond gaat of niet.
+    /// </summary>
+    /// <param name="looping"></param>
     public void SetLoopAround(bool looping)
     {
         loop = looping;
         UpdateEverything();
     }
-#if false
-    public void UpdateNamesAndIndicesFromIndex(int i)
-    {
-        UpdateEverything();
-        /*
-        for (int j = i; j < elements.Count; j++)
-        {
-            V3WayPointObject wo = elements[j];
-            wo.name = currentPrefab.name + j;
-            wo.indexInWayPointSystem = j;
-        }
-        */
-    }
-#endif
 
     /// <summary>
-    /// Werkt alle elementen in het waypointsysteem bij. Deze functie moet nog opgesplitst worden zodat het geheel efficiënter gemaakt kan worden.
+    /// Werkt alle elementen in het waypointsysteem bij.
     /// </summary>
     public void UpdateEverything()
     {
@@ -58,6 +59,11 @@ public class V3WayPointSystem : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Verwijdert een waypoint van de lijst en werkt alle andere bij.
+    /// </summary>
+    /// <param name="wo"></param>
+    /// <param name="index"></param>
     public void RemoveWayPoint(V3WayPointObject wo, int index)
     {
         elements.Remove(wo);
@@ -65,6 +71,11 @@ public class V3WayPointSystem : MonoBehaviour
         //UpdateNamesAndIndicesFromIndex(index);
     }
 
+    /// <summary>
+    /// Voegt een waypoint opnieuw toe die voorheen verwijderd was. Wordt meestal aangeroepen als je met Ctrl+Z een verwijderd element terug haalt.
+    /// </summary>
+    /// <param name="wo"></param>
+    /// <param name="index"></param>
     public void ReAddDeletedWayPoint(V3WayPointObject wo, int index)
     {
         if (!elements.Contains(wo))
@@ -97,6 +108,9 @@ public class V3WayPointSystem : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Werkt alle elementen bij wanneer de prefab is aangepast.
+    /// </summary>
     public void UpdatePrefabForChildren()
     {
         int index = -1;
@@ -131,6 +145,10 @@ public class V3WayPointSystem : MonoBehaviour
         Selection.activeTransform = index != -1 ? elements[index].transform : transform;      
     }
 
+    /// <summary>
+    /// Maakt een nieuwe waypoint aan en geeft deze door.
+    /// </summary>
+    /// <returns></returns>
     public V3WayPointObject CreateWayPoint()
     {
         GameObject gm = Instantiate(currentPrefab);
@@ -144,6 +162,10 @@ public class V3WayPointSystem : MonoBehaviour
         return wo;
     }
 
+    /// <summary>
+    /// Voeg een nieuwe waypoint aan het begin of einde toe.
+    /// </summary>
+    /// <param name="append"></param>
     private void AppendOrPrepend(bool append)
     {
         V3WayPointObject wo = CreateWayPoint();

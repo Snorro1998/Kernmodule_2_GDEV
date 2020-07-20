@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System.IO;
 
 public class V3WayPointWindow : EditorWindow
 {
@@ -43,7 +44,6 @@ public class V3WayPointWindow : EditorWindow
         {
             activeLoop = EditorGUILayout.Toggle("Loop", activeLoop);
             GUILayout.Label("Create new " + activeObjectPrefab.name, EditorStyles.boldLabel);
-
             guiDrawer.DisplayButton("At the end", () => { currentWayPointSystem.Append(); });
             guiDrawer.DisplayButton("At the beginning", () => { currentWayPointSystem.Prepend(); });
             if (currentWPElement != null)
@@ -51,6 +51,8 @@ public class V3WayPointWindow : EditorWindow
                 guiDrawer.DisplayButton("After selected", () => { currentWayPointSystem.InsertAfter(currentWPElement.GetComponent<V3WayPointObject>()); });
                 guiDrawer.DisplayButton("Before selected", () => { currentWayPointSystem.InsertBefore(currentWPElement.GetComponent<V3WayPointObject>()); });
             }
+            GUILayout.Label("Other options", EditorStyles.boldLabel);
+            guiDrawer.DisplayButton("Save as prefab", () => { SaveAsPrefab(); });
         }
     }
 
@@ -71,6 +73,24 @@ public class V3WayPointWindow : EditorWindow
                 lastLoop = activeLoop;
                 currentWayPointSystem.SetLoopAround(activeLoop);
             }
+        }
+    }
+
+    /// <summary>
+    /// Slaat huidige waypointsysteem op als een prefab.
+    /// </summary>
+    private void SaveAsPrefab()
+    {
+        if (currentWayPointSystem == null)
+        {
+            return;
+        }
+        GameObject gm = currentWayPointSystem.gameObject;
+        var path = EditorUtility.SaveFilePanel("Save waypoint system as prefab", "", gm.name + ".prefab", "prefab");
+        if (path.Length != 0)
+        {
+            // Geeft een waarschuwing maar werkt wel?!
+            PrefabUtility.SaveAsPrefabAsset(gm, path);
         }
     }
 

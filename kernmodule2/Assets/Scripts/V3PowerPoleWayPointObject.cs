@@ -15,10 +15,7 @@ public class V3PowerPoleWayPointObject : V3WayPointObject
         wires = transform.Find("StartPoints");
         if (wirePrefab != null)
         {
-            //if (wireLength == 0)
-            //{
             wireLength = wirePrefab.GetComponent<Renderer>().bounds.size.z;
-            //}
         }
     }
 

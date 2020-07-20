@@ -5,13 +5,13 @@ using UnityEngine;
 [ExecuteInEditMode]
 public class V3WayPointObject : MonoBehaviour
 {
-    //[HideInInspector]
+    [HideInInspector]
     public V3WayPointSystem wpSys;
-    //[HideInInspector]
+    [HideInInspector]
     public int indexInWayPointSystem = -1;
-    //[HideInInspector]
+    [HideInInspector]
     public V3WayPointObject prevObj = null;
-    //[HideInInspector]
+    [HideInInspector]
     public V3WayPointObject nextObj = null;
 
     private Vector3 lastPosition;
@@ -19,7 +19,7 @@ public class V3WayPointObject : MonoBehaviour
     /// <summary>
     /// Zal waar zijn als de positie is verandert.
     /// </summary>
-    bool PositionChanged
+    private bool PositionChanged
     {
         get
         {
@@ -61,7 +61,6 @@ public class V3WayPointObject : MonoBehaviour
             if (!tilt)
             {
                 tmpPos.y = transform.position.y;
-                //transform.LookAt(tmpVec);
             }
             transform.LookAt(tmpPos);
         }
@@ -78,14 +77,5 @@ public class V3WayPointObject : MonoBehaviour
     public virtual void UpdateSelf()
     {
         PointToPrevious(true);
-        /*
-        if (prevObj != null)
-        {
-            transform.LookAt(prevObj.transform);
-        }
-        else if (nextObj != null)
-        {
-            transform.forward = nextObj.transform.forward;
-        }*/
     }
 }
